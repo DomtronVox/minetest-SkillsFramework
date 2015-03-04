@@ -130,6 +130,10 @@ In order of importance.
 
 * Actually handle the static setting when attaching skill sets.
 
+* Add user error prevention code (sanity checks).
+
+* Improve the chat command.
+
 * Create formspec for viewing skills.
 
 * Better handling of old skill sets when:
@@ -137,4 +141,8 @@ In order of importance.
     * Skills have been added or removed from the lua code.
         * If skills are removed consider removing them from skill sets. When implemented this should to be optional(opt-in probebly).
 
-* Think about implementing multiple skill systems (like originally intended) in a clean way or just making each skill system a separate mod. 
+* Allow defining skill level caps.
+
+* Consider allowing modders to define what skills are in a skill set. Could be useful for a "learning skills" and class systems though a class based system should probably just be another skill system.
+
+* Think about implementing multiple skill systems (like originally intended) in a clean way or decide to just make each skill system a separate mod. 
