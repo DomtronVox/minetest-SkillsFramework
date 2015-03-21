@@ -128,21 +128,21 @@ All feedback and bug reports are welcome. Open a new GitHub issue for bugs or po
 # TODO
 In order of importance.
 
-* Actually handle the static setting when attaching skill sets.
-
 * Add user error prevention code (sanity checks).
 
 * Improve the chat command.
 
 * Create formspec for viewing skills.
 
+* Optional "show last used skills on HUD".
+
+* Allow defining skill level caps.
+
 * Better handling of old skill sets when:
     * Players never log in again or haven't logged in for a very long time.
     * Skills have been added or removed from the lua code.
         * If skills are removed consider removing them from skill sets. When implemented this should to be optional(opt-in probebly).
 
-* Allow defining skill level caps.
-
-* Consider allowing modders to define what skills are in a skill set. Could be useful for a "learning skills" and class systems though a class based system should probably just be another skill system.
+* Let Modders define weather a skill is locked by default and allow them to unlock skills when conditions are met. Could be useful for learning skills or skill trees.
 
 * Think about implementing multiple skill systems (like originally intended) in a clean way or decide to just make each skill system a separate mod. 

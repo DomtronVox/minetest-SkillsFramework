@@ -40,7 +40,11 @@ SkillsFramework.trySkill = function(entity, skill, test_func)
         local SSet = SkillsFramework.__skillsets[entity]
         
         local result = test_func(SSet[skill]["level"], SSet[skill]["experience"])
-        SkillsFramework.addExperience(entity, skill, result)
+
+        -- if the skill is not static then add the experience
+        if not SSet[skill]["static"] then
+            SkillsFramework.addExperience(entity, skill, result)
+        end
 
         --make sure level up happens if it should
         SkillsFramework.__fixSkillExpAndLevel(entity, skill) --see util.lua
@@ -51,13 +55,14 @@ end
 
 --Creates and then attaches a new skill set to the given identifier.
 --  entity    : skill set id 
-SkillsFramework.attachSkillset = function(entity)
+SkillsFramework.attachSkillset = function(entity, static)
     local base_set = SkillsFramework.__base_skillset
     SkillsFramework.__skillsets[entity] = {}
 
     --copy the base skill set into the new entity's skill set
     for skill, value in pairs(base_set) do
         SkillsFramework.__skillsets[entity][skill] = value
+        SkillsFramework.__skillsets[entity][skill]["static"] = static
     end
 end
 
@@ -123,7 +128,7 @@ SkillsFramework.setExperience = function(entity, skill, experience)
         --remove decimal portion
         experience = math.floor(experience + 0.5)
 
-        --set the new experience value and make sure a level up occures if needed
+        --set the new experience value and make sure a level up occurs if needed
         SkillsFramework.__skillsets[entity][skill]["experience"] = experience
         SkillsFramework.__fixSkillExpAndLevel(entity, skill) --see util.lua
 
