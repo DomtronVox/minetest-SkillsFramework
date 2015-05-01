@@ -2,11 +2,54 @@
 --Author: Domtron Vox(domtron.vox@gmail.com)
 --Description: Set of functions that make up the API
 
-
---TODO: shows a formspec for skill GUI interaction.
-SkillsFramework.showFormspec = function()
-
+local function generateBar(playername, skillname)
+	local level = SkillsFramework.getLevel(playername, skillname) .. ""
+	local level_string = ""
+	for i = 1,#level do
+		local char = string.sub(level, i, i)
+		level_string = level_string .. ":" .. 14 + (i - #level / 2) * 4 .. ",1=" ..
+		"skillsframework_" .. char .. ".png"
+	end
+	local bar = "\\[combine:35x7:" .. (SkillsFramework.getExperience(playername, skillname) / SkillsFramework.getNextLevelCost(playername, skillname) * 35 - 35) .. ",0=skillsframework_bar.png:0,0=skillsframework_frame.png" .. level_string
+	return bar
 end
+
+--shows a formspec for skill GUI interaction.
+SkillsFramework.showFormspec = function(playername, page)
+	page = page or 1
+	local formspec = "size[8,9]" ..
+			"tabheader[0,0;skills_page;"
+
+	for i = 1,math.ceil(#SkillsFramework.__skills_list / 18)do
+		formspec = formspec ..
+			"Page " .. i .. ","
+	end
+	formspec = string.sub(formspec, 1, -2)
+	formspec = formspec .. ";" .. page .. "]"
+
+	local y_index = 0
+	page = page - 1
+	for i = 1 + page * 18,18 + page * 18,1 do
+		local skillname = SkillsFramework.__skills_list[i]
+		if not skillname then
+			break
+		end
+		formspec = formspec ..
+			"image[0," .. y_index * .5 + .1 .. ";1.5,.4;" .. generateBar(playername, skillname) .. "]" ..
+			"label[1.5," .. y_index * .5 .. ";Skill: " .. skillname .. "]"
+		y_index = y_index + 1
+	end
+	minetest.show_formspec(playername, "skillsframework:display", formspec)
+end
+
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+	if (formname ~= "skillsframework:display") then
+		return
+	end
+	if (fields["skills_page"]) then
+		SkillsFramework.showFormspec(player:get_player_name(), fields["skills_page"])
+	end
+end)
 
 --Adds a new skill definition to the skill system.
 --  name       : skill's name
@@ -26,6 +69,8 @@ SkillsFramework.defineSkill = function(name, group, level_func)
         ["next_level"] = next_lvl,    --cost to reach next level (pp or exp)
         ["level_func"] = level_func   --function that calculates each levels cost
     }
+
+    table.insert(SkillsFramework.__skills_list, name)
 end
 
 --Tests a skill to see if the action succeeds.
