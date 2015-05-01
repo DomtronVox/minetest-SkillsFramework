@@ -11,6 +11,9 @@ SkillsFramework.__skillsets = {}
 --a base skill set which acts as a base for new skillsets 
 SkillsFramework.__base_skillset = {}
 
+--the order of the skills for display
+SkillsFramework.__skills_list = {}
+
 --load important stuff
 dofile(minetest.get_modpath(minetest.get_current_modname()).."/settings.lua")
 dofile(minetest.get_modpath(minetest.get_current_modname()).."/util.lua")
@@ -102,6 +105,7 @@ minetest.register_chatcommand("skills", {
                 SF.getNextLevelCost(PCname, skillname)
             )
         end
+	SkillsFramework.showFormspec(PCname)
     end
 })
 
