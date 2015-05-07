@@ -85,27 +85,54 @@ minetest.register_on_leaveplayer(function(ObjectRef)
     SkillsFramework.__saveSkillsets()
 end)
 
+--do some stuff right after the game starts
+minetest.after(0, function()
+
+    --TODO: block new skills from being added.
+    
+end)
 
 --Chat command to list off skills. 
---TODO: not feasible when there are many skills, fix.
 minetest.register_chatcommand("skills", {
-    params = "",
-    description = "Mod Manuel: Usage: /man <object name>",
+    params = "skill",
+    description = "Skill Framework: Usage: '/skills' lists all skill names."..
+                  "'/skills <skill name>' prints data on the requested skill."..
+                  "'/Skills @gui' opens the skills formspec.",
     func = function(PCname, param)
         local SF = SkillsFramework
-        --loop through each skill and print it
-        for skillname,v in pairs(SF.__skillsets[PCname]) do
-            minetest.chat_send_player(PCname,
-                skillname .. 
-                " - Level: " .. 
-                SF.getLevel(PCname, skillname) .. 
-                "; Experience: " ..
-                SF.getExperience(PCname, skillname) ..
-                "; Next Level: " ..
-                SF.getNextLevelCost(PCname, skillname)
-            )
-        end
-	SkillsFramework.showFormspec(PCname)
-    end
+
+        --list what skills are avalible to the player
+        if param == "" then
+            local skill_list = ""
+
+            --TODO: when disable/enable skill is implemented only list enabled skills
+            for skillname,v in pairs(SkillsFramework.__skillsets[PCname]) do
+                skill_list = skill_list..skillname..", "
+            end
+            
+            minetest.chat_send_player(PCname, skill_list)
+            SF.showFormspec(PCname)
+         --open the formspec with a chat command
+         elseif param == "@gui" then
+             SF.showFormspec(PCname)
+
+         --TODO: make skill name parameter more lenient (i.e. allow both digging and Digging)
+         -- the param is the skill so print the data if possible
+         elseif SkillsFramework.__skillEntityExists(PCname, param) then
+             minetest.chat_send_player(PCname,
+                  param .. 
+                  " - Level: " .. 
+                  SF.getLevel(PCname, param) .. 
+                  "; Experience: " ..
+                  SF.getExperience(PCname, param) ..
+                  "; Next Level: " ..
+                  SF.getNextLevelCost(PCname, param)
+              )
+
+         --all else has failed. print an error
+         else
+             minetest.chat_send_player(PCname, "\""..param.."\" is not a skill you have. make sure you spelled it right including capitalization.")
+         end
+    end --function end
 })
 
