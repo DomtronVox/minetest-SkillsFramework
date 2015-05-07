@@ -78,3 +78,29 @@ SkillsFramework.__fixSkillExpAndLevel = function(entity, skill)
         SkillsFramework.addLevel(entity, skill, 1) 
     end
 end
+
+
+--Generates the experience/level bar for a given skill. Returns the formspec string
+--    for the bare which will be appended to the main skill formspec string.
+function generateBar(playername, skillname)
+        local SF = SkillsFramework
+        local level_string = ""
+
+        --convert the level to a string so we can step throught it
+	local level = SF.getLevel(playername, skillname) .. ""
+
+        --step the length of the sting and convert each digit into images of digits
+	for i = 1,#level do
+		local char = string.sub(level, i, i)
+		level_string = level_string .. ":" .. 14 + (i - #level / 2) * 4 .. ",1=" ..
+		"skillsframework_" .. char .. ".png"
+	end
+        
+        --create the formspec string for the bar.
+	local bar = "\\[combine:35x7:" 
+                    .. (SF.getExperience(playername, skillname) / 
+                          SF.getNextLevelCost(playername, skillname) * 35 - 35) 
+                    .. ",0=skillsframework_bar.png:0,0=skillsframework_frame.png" .. level_string
+
+	return bar
+end

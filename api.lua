@@ -2,18 +2,6 @@
 --Author: Domtron Vox(domtron.vox@gmail.com)
 --Description: Set of functions that make up the API
 
-local function generateBar(playername, skillname)
-	local level = SkillsFramework.getLevel(playername, skillname) .. ""
-	local level_string = ""
-	for i = 1,#level do
-		local char = string.sub(level, i, i)
-		level_string = level_string .. ":" .. 14 + (i - #level / 2) * 4 .. ",1=" ..
-		"skillsframework_" .. char .. ".png"
-	end
-	local bar = "\\[combine:35x7:" .. (SkillsFramework.getExperience(playername, skillname) / SkillsFramework.getNextLevelCost(playername, skillname) * 35 - 35) .. ",0=skillsframework_bar.png:0,0=skillsframework_frame.png" .. level_string
-	return bar
-end
-
 --shows a formspec for skill GUI interaction.
 SkillsFramework.showFormspec = function(playername, page)
 	page = page or 1
@@ -42,15 +30,6 @@ SkillsFramework.showFormspec = function(playername, page)
 	minetest.show_formspec(playername, "skillsframework:display", formspec)
 end
 
-minetest.register_on_player_receive_fields(function(player, formname, fields)
-	if (formname ~= "skillsframework:display") then
-		return
-	end
-	if (fields["skills_page"]) then
-		SkillsFramework.showFormspec(player:get_player_name(), fields["skills_page"])
-	end
-end)
-
 --Adds a new skill definition to the skill system.
 --  name       : skill's name
 --  group      : name of group the skill belongs to
@@ -70,6 +49,7 @@ SkillsFramework.defineSkill = function(name, group, level_func)
         ["level_func"] = level_func   --function that calculates each levels cost
     }
 
+    --skills are listed on the formspec in the order they are registered.
     table.insert(SkillsFramework.__skills_list, name)
 end
 

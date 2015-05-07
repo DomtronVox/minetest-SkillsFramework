@@ -48,11 +48,29 @@ minetest.register_globalstep(function(dtime)
      end
 end)
 
+
+--function for switching between pages of the skill formspec
+minetest.register_on_player_receive_fields(function(player, formname, fields)
+        -- verify this form is the skillframework form
+	if (formname ~= "skillsframework:display") then
+		return
+	end
+
+        --switch to the page whose button was clicked.
+	if (fields["skills_page"]) then
+		SkillsFramework.showFormspec(player:get_player_name(), fields["skills_page"])
+	end
+end)
+
+
+
+
 --##Handle player related events##
 --setup a new player
 minetest.register_on_newplayer(function(player)
     SkillsFramework.attachSkillset(player:get_player_name())
 end)
+
 
 --on join make sure player exists and that he has all the currently registered skills
 --  Note: keep skills nolonger registerd for now
@@ -80,6 +98,7 @@ minetest.register_on_joinplayer(function(player)
     end
 end)
 
+
 --save data when a player leaves
 minetest.register_on_leaveplayer(function(ObjectRef)
     SkillsFramework.__saveSkillsets()
@@ -91,6 +110,7 @@ minetest.after(0, function()
     --TODO: block new skills from being added.
     
 end)
+
 
 --Chat command to list off skills. 
 minetest.register_chatcommand("skills", {
@@ -135,4 +155,3 @@ minetest.register_chatcommand("skills", {
          end
     end --function end
 })
-
