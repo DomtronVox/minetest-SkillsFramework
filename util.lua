@@ -73,7 +73,7 @@ end
 SkillsFramework.__fixSkillExpAndLevel = function(entity, skill)
     local skill_obj = SkillsFramework.__skillsets[entity][skill]
 
-    if skill_obj["experience"] >= skill_obj["next_level"] then
+    while skill_obj["experience"] >= skill_obj["next_level"] do
         skill_obj["experience"] = skill_obj["experience"] - skill_obj["next_level"]
         SkillsFramework.addLevel(entity, skill, 1) 
     end
