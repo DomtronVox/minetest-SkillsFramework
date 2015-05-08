@@ -5,7 +5,7 @@
 --NOTE: saving and loading code barrowed and modified from AdventureTest's modified Default mod
 
 --saves all the skill sets to a file 
-SkillsFramework.__saveSkillsets = function()
+SkillsFramework.__save_skillsets = function()
     minetest.log("info", "[SKILLFRAMEWORK, Notice] Saving skills")
     
     --open or create a file at the specified path
@@ -20,7 +20,7 @@ end
 
 
 --loads all the skill sets from the file
-SkillsFramework.__loadSkillsets = function()
+SkillsFramework.__load_skillsets = function()
     --try and open the skill sets save file
     local file = io.open(SkillsFramework.FILEPATH, "r")
 
@@ -51,7 +51,7 @@ end
 
 
 --returns true if the entity and skill exists and false+an error if they don't.
-SkillsFramework.__skillEntityExists = function(entity, skill)
+SkillsFramework.__skill_entity_exists = function(entity, skill)
     --make sure the given entity exists
     if SkillsFramework.__skillsets[entity] then
         --make sure the skill exists
@@ -70,24 +70,24 @@ end
 
 --verifies that the experience "bar" does not exceed the to next level value
 --  skill_obj: table that has a single skills data from a particular skill set
-SkillsFramework.__fixSkillExpAndLevel = function(entity, skill)
+SkillsFramework.__fix_skill_exp_and_level = function(entity, skill)
     local skill_obj = SkillsFramework.__skillsets[entity][skill]
 
     while skill_obj["experience"] >= skill_obj["next_level"] do
         skill_obj["experience"] = skill_obj["experience"] - skill_obj["next_level"]
-        SkillsFramework.addLevel(entity, skill, 1) 
+        SkillsFramework.add_level(entity, skill, 1) 
     end
 end
 
 
 --Generates the experience/level bar for a given skill. Returns the formspec string
 --    for the bare which will be appended to the main skill formspec string.
-function generateBar(playername, skillname)
+function generate_bar(playername, skillname)
         local SF = SkillsFramework
         local level_string = ""
 
         --convert the level to a string so we can step throught it
-	local level = SF.getLevel(playername, skillname) .. ""
+	local level = SF.get_level(playername, skillname) .. ""
 
         --step the length of the sting and convert each digit into images of digits
 	for i = 1,#level do
@@ -98,8 +98,8 @@ function generateBar(playername, skillname)
         
         --create the formspec string for the bar.
 	local bar = "\\[combine:35x7:" 
-                    .. (SF.getExperience(playername, skillname) / 
-                          SF.getNextLevelCost(playername, skillname) * 35 - 35) 
+                    .. (SF.get_experience(playername, skillname) / 
+                          SF.get_next_level_cost(playername, skillname) * 35 - 35) 
                     .. ",0=skillsframework_bar.png:0,0=skillsframework_frame.png" .. level_string
 
 	return bar

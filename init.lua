@@ -26,13 +26,13 @@ SkillsFramework.__savetimer = SkillsFramework.SAVE_INTERVAL
 
 --##Handle server status changes##
 --load data on startup
-SkillsFramework.__loadSkillsets() --see util.lua
+SkillsFramework.__load_skillsets() --see util.lua
 
 --save data on shutdown
 minetest.register_on_shutdown(function()
     --Note: not guaranteed to be called if minetest crashes which is why
     --    we save regularly in globalstep below
-    SkillsFramework.__saveSkillsets() --see util.lua
+    SkillsFramework.__save_skillsets() --see util.lua
 end)
 
 --modify save countdown each global step and save when zero
@@ -44,7 +44,7 @@ minetest.register_globalstep(function(dtime)
          --reset timer
          SkillsFramework.__savetimer = SkillsFramework.SAVE_INTERVAL
          
-         SkillsFramework.__saveSkillsets() --see util.lua
+         SkillsFramework.__save_skillsets() --see util.lua
      end
 end)
 
@@ -58,7 +58,7 @@ minetest.register_on_player_receive_fields(function(player, formname, fields)
 
         --switch to the page whose button was clicked.
 	if (fields["skills_page"]) then
-		SkillsFramework.showFormspec(player:get_player_name(), fields["skills_page"])
+		SkillsFramework.show_formspec(player:get_player_name(), fields["skills_page"])
 	end
 end)
 
@@ -68,7 +68,7 @@ end)
 --##Handle player related events##
 --setup a new player
 minetest.register_on_newplayer(function(player)
-    SkillsFramework.attachSkillset(player:get_player_name())
+    SkillsFramework.attach_skillset(player:get_player_name())
 end)
 
 
@@ -93,7 +93,7 @@ minetest.register_on_joinplayer(function(player)
 
         --either player joined before skills were added or some other issue occurred
         --  give this poor lost soul a skill set!
-        SkillsFramework.attachSkillset(plyname)
+        SkillsFramework.attach_skillset(plyname)
 
     end
 end)
@@ -101,7 +101,7 @@ end)
 
 --save data when a player leaves
 minetest.register_on_leaveplayer(function(ObjectRef)
-    SkillsFramework.__saveSkillsets()
+    SkillsFramework.__save_skillsets()
 end)
 
 --do some stuff right after the game starts
@@ -134,7 +134,7 @@ minetest.register_chatcommand("skills", {
 
          --open the formspec with a chat command
          elseif param == "@gui" then
-             SF.showFormspec(PCname)
+             SF.show_formspec(PCname)
 
          --TODO: make skill name parameter more lenient (i.e. allow both digging and Digging)
          -- the param is the skill so print the data if possible
@@ -142,11 +142,11 @@ minetest.register_chatcommand("skills", {
              minetest.chat_send_player(PCname,
                   param .. 
                   " - Level: " .. 
-                  SF.getLevel(PCname, param) .. 
+                  SF.get_level(PCname, param) .. 
                   "; Experience: " ..
-                  SF.getExperience(PCname, param) ..
+                  SF.get_experience(PCname, param) ..
                   "; Next Level: " ..
-                  SF.getNextLevelCost(PCname, param)
+                  SF.get_next_level_cost(PCname, param)
               )
 
          --all else has failed. print an error
