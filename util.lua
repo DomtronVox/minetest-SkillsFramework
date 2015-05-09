@@ -9,7 +9,7 @@ SkillsFramework.__save_skillsets = function()
     minetest.log("info", "[SKILLFRAMEWORK, Notice] Saving skills")
     
     --open or create a file at the specified path
-    local f = io.open(SkillsFramework.FILEPATH, "w")
+    local f = io.open(minetest.get_worldpath()..SkillsFramework.FILE_NAME, "w")
     
     --serialise the skillsets then save them to opend file
     f:write(minetest.serialize(SkillsFramework.__skillsets))
@@ -22,12 +22,12 @@ end
 --loads all the skill sets from the file
 SkillsFramework.__load_skillsets = function()
     --try and open the skill sets save file
-    local file = io.open(SkillsFramework.FILEPATH, "r")
+    local file = io.open(minetest.get_worldpath()..SkillsFramework.FILE_NAME, "r")
 
     --varify file existed and was opened if not print warning.
     if file == nil then 
         minetest.log("[SKILLSFRAMEWORK, WARNING!] Saved skillsets file " .. 
-           SkillsFramework.FILEPATH ..
+           minetest.get_worldpath()..SkillsFramework.FILE_NAME ..
            " not found, if this is not the first time running skillsframework you "  ..
            "may have lost player skills. Check debug and notify the mod author.")
     else
@@ -38,10 +38,10 @@ SkillsFramework.__load_skillsets = function()
 
         --if the file existed but was empty print warrning
         if text == "" or text == nil then 
-            minetest.log("[SKILLSFRAMEWORK, WARNING!] Saved skillsets file  is" ..
-                SkillsFramework.FILEPATH .. 
-                " blank, if this is not the first time running skillsframework you " ..
-                "may have lost player skills. Check debug and notify the mod author.")
+            minetest.log("[SKILLSFRAMEWORK, WARNING!] Saved skillsets file, " ..
+                minetest.get_worldpath()..SkillsFramework.FILE_NAME .. 
+                ", is blank. If this is not the first time running skillsframework you " ..
+                "may have lost player skills. Check your logs and notify the mod author.")
         else
             --deserialise the string recovered from the file and place the table under skillsets
             SkillsFramework.__skillsets = minetest.deserialize(text)

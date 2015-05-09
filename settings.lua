@@ -13,5 +13,5 @@ SkillsFramework.SAVE_SKILLS = true
 SkillsFramework.SAVE_INTERVAL = 1000 --milliseconds
 
 --filepath where all skillsets are saved 
-SkillsFramework.FILEPATH = minetest.get_worldpath().."/skill_sets"
+SkillsFramework.FILE_NAME = "/skill_sets"
 
