@@ -32,7 +32,7 @@ SkillsFramework.__load_skillsets = function()
            "may have lost player skills. Check debug and notify the mod author.")
     else
 
-        --read the data from then close the file
+        --read the data from, then close the file
         local text = file:read("*all")
         file:close()
 
@@ -51,17 +51,19 @@ end
 
 
 --returns true if the entity and skill exists and false+an error if they don't.
-SkillsFramework.__skill_entity_exists = function(entity, skill)
+SkillsFramework.__skill_entity_exists = function(set_id, skill)
     --make sure the given entity exists
-    if SkillsFramework.__skillsets[entity] then
+    if SkillsFramework.__skillsets[set_id] then
         --make sure the skill exists
-        if SkillsFramework.__skillsets[entity][skill] then
-            return true -- both exist we are done
-        else
+        if not SkillsFramework.__skill_defs[skill] then
             minetest.log("[SKILLSFRAMEWORK, WARNING!] The skill name "..skill.." is not a registered skill!")
+        elseif not SkillsFramework.__skillsets[set_id][skill] then
+            minetest.log("[SKILLSFRAMEWORK, WARNING!] The skill name "..skill.." is not in this skillset!")
+        else
+            return true -- both exist we are done
         end
     else
-        minetest.log("[SKILLSFRAMEWORK, WARNING!] The entity name "..entity.." is not a valid skill set id!")
+        minetest.log("[SKILLSFRAMEWORK, WARNING!] The entity name "..set_id.." is not a valid skill set id!")
     end
 
     return false --one or the other is missing look for errors in the log
@@ -70,12 +72,12 @@ end
 
 --verifies that the experience "bar" does not exceed the to next level value
 --  skill_obj: table that has a single skills data from a particular skill set
-SkillsFramework.__fix_skill_exp_and_level = function(entity, skill)
-    local skill_obj = SkillsFramework.__skillsets[entity][skill]
+SkillsFramework.__fix_skill_exp_and_level = function(set_id, skill)
+    local skill_obj = SkillsFramework.__skillsets[set_id][skill]
 
     while skill_obj["experience"] >= skill_obj["next_level"] do
         skill_obj["experience"] = skill_obj["experience"] - skill_obj["next_level"]
-        SkillsFramework.add_level(entity, skill, 1) 
+        SkillsFramework.add_level(set_id, skill, 1) 
     end
 end
 
@@ -95,7 +97,7 @@ function generate_bar(playername, skillname)
 		level_string = level_string .. ":" .. 14 + (i - #level / 2) * 4 .. ",1=" ..
 		"skillsframework_" .. char .. ".png"
 	end
-        
+
         --create the formspec string for the bar.
 	local bar = "\\[combine:35x7:" 
                     .. (SF.get_experience(playername, skillname) / 

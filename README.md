@@ -29,9 +29,9 @@ __Usage__: SkillsFramework.function_name(arguments)
 | Name            | Arguments               | Returns | Description |
 |-----------------|-------------------------|---------|-------------|
 | show_formspec    | player                  | none | Shows a formspec for graphical skill interaction. |
-| define\_skill     | name, group, level_func | none | Adds a new skill definition to the skill system. |
-| attach\_skillset  | set_id, static=false    | none | Creates and then attaches a new skill set to the given identifier.|
-| remove\_skillSet  | set_id                  | none | Deletes a skill set. |
+| register\_skill  | name, group, level_func | none | Adds a new skill definition to the skill system. |
+| attach\_skillset | set_id                 | none | Creates and attaches a new skill set to the given identifier.|
+| remove\_skillset  | set_id                  | none | Deletes a skill set. |
 | set\_level        | set_id, skill, level    | none | Allows setting the level of a skill in a skill set. |
 | add\_level        | set_id, skill, level      | none | Adds the given amount to the level. |
 | get\_level        | set_id, skill           | int  | Return the level of specified skill. |
@@ -55,10 +55,19 @@ Settings are Located in settings.lua. They have all capitalized names with under
 ## 1) Register Skills
 Skills must be registered during Minetest's registration period. This is done with the SkillsFramework.add\_skill(name, group, level\_func) function. A skill is defined as a level experience pair with an assigned cost for each level.
 
-* SkillsFramework.add\_skill(name, group, level\_func)
-    * "name" is an identifier for the skill and what the player will see.
-    * "group" is an arbitrary category name used to sort/group skills.
-    * "level\_func" is a function called when a new skill set is created and on each subsequent level up. It needs to receive the skill's next level and must return a number which is the cost for that next level in experience.
+* SkillsFramework.register\_skill(data\_table)
+    * "data_table" is a table containting info about the skill.
+
+The data table can have the fields listed below. Required means there is no default and the registration fails without it. Table keys need to match the names below exactly.
+
+* mod: __Required__. Name of the mod who is registering the skill.
+* name: __Required__. Name the player will see
+* level\_func: __Required__. A function that defines the cost of each level. Receives an int that is the next level, should return an int that is the experience cost.
+* group: default "none". An arbitrary category name used to sort skills.
+* max: default "no max". Maximum level the skill can reach. If less then min, max is ignored.
+* min: default "0". Level the skill is initiated to and the level it can not drop below.
+* locked: default false. What lock state the skill will start with. If locked the player cannot see the skill and any attempt to change it fails.
+
 
 ###Level Cost Function Examples
 Here are two level\_func examples. The first example makes every level cost 100. The second example increases the cost linearly (i.e. level 3 costs 300).
@@ -69,13 +78,12 @@ Here are two level\_func examples. The first example makes every level cost 100.
 ## 2) Adding Skill Sets
 Skill sets are a collection of skills that are attached to unique identifiers (the player's name for example).
 
-This makes skill sets flexible enough to describe the skills of either an individual or a group. For example a skill set can be created and preinitialized for "level one skeletons" allowing any of level one skeleton to use those skills. When using it for a group, the skill set should be set as static so it will block experience gain; otherwise the group will gain experience from actions each individual does. 
+This makes skill sets flexible enough to describe the skills of either an individual or a group. For example a skill set can be created and preinitialized for "level one skeletons" allowing any of level one skeleton to use those skills. Of course when using it for a group the modder should not add experience otherwise the entire group will gain levels from actions each individual does. 
 
-Use the SkillsFramework.attach\_skillset(entity, static=false) to create a skill set connected to an entity.
+Use the SkillsFramework.attach\_skillset(entity) to create a skill set connected to an entity.
 
-* SkillsFramework.attach_skillset(entity, static=false)
-    * "entity" is an unique identifier. This should be the entity's Minetest ID for individuals or a unique string for groups.
-    * "static" (default: __false__) is a bool that when true turns off experience gain for the skill set.
+* SkillsFramework.attach_skillset(set\_id)
+    * "set\_id" is an unique identifier. This should be the entity's Minetest ID for individuals or a unique string for groups.
 
 ## 3) Using and Manipulating Skills
 Actions use skills. The definition of an action is upto the modder and needs to be coded. The common places for this code would be in the callbacks for the following 3 types of functions:
@@ -144,6 +152,8 @@ In order of importance.
     * Players never log in again or haven't logged in for a very long time.
     * Skills have been added or removed from the lua code.
         * If skills are removed consider removing them from skill sets. When implemented this should to be optional(opt-in probebly).
+
+* Add a on\_level\_up function for skills
 
 * Way to see another player's skills for admins and maybe players.
 

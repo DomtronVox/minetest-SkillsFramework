@@ -8,8 +8,8 @@ SkillsFramework = {} --global variable that holds API and data
 --holds skill information for each entity assigned a skill set
 SkillsFramework.__skillsets = {}
 
---a base skill set which acts as a base for new skillsets 
-SkillsFramework.__base_skillset = {}
+--a table of all skill definitions
+SkillsFramework.__skill_defs = {}
 
 --the order of the skills for display
 SkillsFramework.__skills_list = {}
@@ -82,10 +82,14 @@ minetest.register_on_joinplayer(function(player)
 
         --Server has a recored of the players skills but lets make sure he has 
         --  all of them in case more skills were added
-        for skill, value in pairs(SkillsFramework.__base_skillset) do
+        for skill, value in pairs(SkillsFramework.__skill_defs) do
 
             if SkillsFramework.__skillsets[plyname][skill] == nil then
-                SkillsFramework.__skillsets[plyname][skill] = value
+                --TODO This is the same code as attach_skillset. code duplication bad so fix it.
+                SkillsFramework.__skillsets[plyname][skill] = {name = skill}
+
+                SkillsFramework.set_level(set_id, skill_id, SkillsFramework.__skill_defs[skill]["min"])
+                SkillsFramework.set_experience(set_id, skill_id, 0)
             end
 
         end
