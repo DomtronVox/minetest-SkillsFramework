@@ -62,7 +62,20 @@ SkillsFramework.define_skill = function(data)
         return
     end
 
-    
+    -- do sanity checks on min and max
+    if data.min and data.min < 0 then
+        minetest.log("[Warning, SkillFramework] Skill "
+                     ..data.mod..':'..data.name
+                     .."'s min data is less then zero. Setting to zero instead.")
+        data.min = 0
+    end
+
+    if data.max and data.max < 0 then
+        minetest.log("[Warning, SkillFramework] Skill "
+                     ..data.mod..':'..data.name
+                     .."'s max data is less then zero. Setting to zero instead.")
+        data.max = 0
+    end
 
     --create entry for the new skill
     SkillsFramework.__skill_defs[data.mod..':'..data.name] = {
@@ -121,7 +134,11 @@ SkillsFramework.set_level = function(set_id, skill, level)
         local skill_def = SkillsFramework.__skill_defs[skill]
         local skill_set = SkillsFramework.__skillsets[set_id][skill]
 
-        skill_set["level"] = level --set the level
+        if level > skill_def.max then
+            level = skill_def.max
+        end
+ 
+        skill_set["level"] = level
 
         --calculate new next_level value; if 0 then set to 1 since we need some cost for 
         skill_set["next_level"] = skill_def["level_func"](level+1)
@@ -159,7 +176,13 @@ end
 --  skill     : name of the skill to test
 --  experience : amount to set it to
 SkillsFramework.set_experience = function(set_id, skill, experience)
-    if SkillsFramework.__skill_entity_exists(set_id, skill) then        
+    if SkillsFramework.__skill_entity_exists(set_id, skill) then
+        local skill_def = SkillsFramework.__skill_defs[skill]
+        local skill_set = SkillsFramework.__skillsets[set_id][skill]
+        
+        --don't add experience if a level is maxed out.
+        if skill_set["level"] == skill_def.max then return true end
+
         --remove decimal portion
         experience = math.floor(experience + 0.5)
 

@@ -140,13 +140,13 @@ All feedback and bug reports are welcome. Open a new GitHub issue for bugs or po
 # TODO
 In order of importance.
 
-* Add user error prevention code (sanity checks).
+* Ongoing: Add user error prevention code (sanity checks).
 
 * Improve skill formspec.
+    * fix pages all showing the same 18 skills
+    * add an indicator that a skill is maxed out.
 
 * Optional "show last used skills on HUD".
-
-* Allow defining skill level caps.
 
 * Better handling of old skill sets when:
     * Players never log in again or haven't logged in for a very long time.
