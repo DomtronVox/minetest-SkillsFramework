@@ -181,7 +181,9 @@ SkillsFramework.set_experience = function(set_id, skill, experience)
         local skill_set = SkillsFramework.__skillsets[set_id][skill]
         
         --don't add experience if a level is maxed out.
-        if skill_set["level"] == skill_def.max then return true end
+        if skill_set["level"] >= skill_def.max and not skill_def.max == 0 then
+            return true
+        end
 
         --remove decimal portion
         experience = math.floor(experience + 0.5)
