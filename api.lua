@@ -6,7 +6,7 @@
 SkillsFramework.show_formspec = function(playername, page)
         local SF = SkillsFramework
 
-	page = page or 1
+	page = page or 1 --default to 1 if no page is given.
 	local formspec = "size[8,9]" ..
 			"tabheader[0,0;skills_page;"
 
@@ -46,19 +46,19 @@ SkillsFramework.define_skill = function(data)
     --TODO test that values are the right types (ints, strings, ect)
     --make sure required values are in the table.
     if not data.name then
-        minetest.log("[Warning, SkillFramework] Skill registered without name. Skill discarded.")
+        minetest.log("[SKILLSFRAMEWORK, WARNING] Skill registered without name. Skill discarded.")
         return 
     end
 
     if not data.mod then
-        minetest.log("[Warning, SkillFramework] Skill "
+        minetest.log("[SKILLSFRAMEWORK, WARNING] Skill "
                      ..data.name
                      .." registration without mod name. Skill discarded.")
         return
     end
 
     if not data.level_func then
-        minetest.log("[Warning, SkillFramework] Skill "
+        minetest.log("[SKILLSFRAMEWORK, WARNING] Skill "
                      ..data.mod..':'..data.name
                      .." registration without level cost function. Skill discarded.")
         return
@@ -66,14 +66,14 @@ SkillsFramework.define_skill = function(data)
 
     -- do sanity checks on min and max
     if data.min and data.min < 0 then
-        minetest.log("[Warning, SkillFramework] Skill "
+        minetest.log("[SKILLSFRAMEWORK, WARNING] Skill "
                      ..data.mod..':'..data.name
                      .."'s min data is less then zero. Setting to zero instead.")
         data.min = 0
     end
 
     if data.max and data.max < 0 then
-        minetest.log("[Warning, SkillFramework] Skill "
+        minetest.log("[SKILLSFRAMEWORK, WARNING] Skill "
                      ..data.mod..':'..data.name
                      .."'s max data is less then zero. Setting to zero instead.")
         data.max = 0
