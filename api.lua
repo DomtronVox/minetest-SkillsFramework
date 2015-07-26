@@ -4,6 +4,8 @@
 
 --shows a formspec for skill GUI interaction.
 SkillsFramework.show_formspec = function(playername, page)
+        local SF = SkillsFramework
+
 	page = page or 1
 	local formspec = "size[8,9]" ..
 			"tabheader[0,0;skills_page;"
@@ -25,7 +27,7 @@ SkillsFramework.show_formspec = function(playername, page)
                 
 		formspec = formspec 
 			.. "image[0," .. y_index * .5 + .1 .. ";1.5,.4;" 
-                        .. generate_bar(playername, skillname) .. "]" 
+                        .. SF.__generate_bar(playername, skillname) .. "]" 
 			.. "label[1.5," .. y_index * .5 .. ";Skill: " .. skillname:split(":")[2] 
                         .. "]"
 		y_index = y_index + 1

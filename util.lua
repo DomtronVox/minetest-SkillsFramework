@@ -1,6 +1,7 @@
 --File: SkillsFramwork/init.lua
 --Author: Domtron Vox (domtron.vox@gmail.com)
---Description: Defines a handful of utility functions
+--Description: Defines a handful of utility functions specifically for keeping the 
+--          API lua file short and to remove code duplication.
 
 --NOTE: saving and loading code barrowed and modified from AdventureTest's modified Default mod
 
@@ -51,24 +52,45 @@ end
 
 
 --returns true if the entity and skill exists and false+an error if they don't.
-SkillsFramework.__skill_entity_exists = function(set_id, skill)
+SkillsFramework.__skill_entity_exists = function(set_id, skill_id)
     --make sure the given entity exists
     if SkillsFramework.__skillsets[set_id] then
         --make sure the skill exists
-        if not SkillsFramework.__skill_defs[skill] then
-            minetest.log("[SKILLSFRAMEWORK, WARNING!] The skill name "..skill.." is not a registered skill!")
-        elseif not SkillsFramework.__skillsets[set_id][skill] then
-            minetest.log("[SKILLSFRAMEWORK, WARNING!] The skill name "..skill.." is not in this skillset!")
+        if not SkillsFramework.__skill_defs[skill_id] then
+            minetest.log("[SKILLSFRAMEWORK, WARNING] The skill name " ..
+                         skill_id .. " is not a registered skill!")
+        elseif not SkillsFramework.__skillsets[set_id][skill_id] then
+            minetest.log("[SKILLSFRAMEWORK, WARNING] The skill name " ..
+                         skill_id .. " is not in this skillset!")
         else
             return true -- both exist we are done
         end
     else
-        minetest.log("[SKILLSFRAMEWORK, WARNING!] The entity name "..set_id.." is not a valid skill set id!")
+        minetest.log("[SKILLSFRAMEWORK, WARNING] The entity name "..set_id.." is not a valid skill set id!")
     end
 
     return false --one or the other is missing look for errors in the log
 end
 
+--creates the data for a particular skill in a skill set
+SkillsFramework.__instantiate_skilldata = function(set_id, skill_id)
+    local skill_data = SkillsFramework.__skill_defs[skill_id]
+
+    --make sure skill is registered
+    if skill_data then 
+        --create a new entry for this skill in the given skill set and populate it
+        SkillsFramework.__skillsets[set_id][skill_id] = {name = skill_id}
+
+        SkillsFramework.set_level(set_id, skill_id, skill_data["min"])
+        SkillsFramework.set_experience(set_id, skill_id, 0)
+
+    --print warning if a invalid skill id is given
+    else
+        minetest.log("[SKILLSFRAMEWORK, WARNING] attempted to create skill data for skill " ..
+                     skill_id .. " in skill set " .. set_id ..
+                     " received an invalid value for skill list. Should be nil or a table.")
+    end
+end
 
 --verifies that the experience "bar" does not exceed the to next level value
 --  skill_obj: table that has a single skills data from a particular skill set
@@ -84,7 +106,7 @@ end
 
 --Generates the experience/level bar for a given skill. Returns the formspec string
 --    for the bare which will be appended to the main skill formspec string.
-function generate_bar(playername, skillname)
+SkillsFramework.__generate_bar = function(playername, skillname)
         local SF = SkillsFramework
         local level_string = ""
 
@@ -97,7 +119,7 @@ function generate_bar(playername, skillname)
 		level_string = level_string .. ":" .. 14 + (i - #level / 2) * 4 .. ",1=" ..
 		"skillsframework_" .. char .. ".png"
 	end
-
+        
         --create the formspec string for the bar.
 	local bar = "\\[combine:35x7:" 
                     .. (SF.get_experience(playername, skillname) / 
