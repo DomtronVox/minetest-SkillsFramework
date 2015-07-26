@@ -68,7 +68,7 @@ end)
 --##Handle player related events##
 --setup a new player
 minetest.register_on_newplayer(function(player)
-    SkillsFramework.attach_skillset(player:get_player_name())
+    SkillsFramework.attach_skillset(player:get_player_name()) --
 end)
 
 
@@ -79,25 +79,12 @@ minetest.register_on_joinplayer(function(player)
     local plyname = player:get_player_name()
 
     if SkillsFramework.__skillsets[plyname] ~= nil then
-
-        --Server has a recored of the players skills but lets make sure he has 
-        --  all of them in case more skills were added
-        for skill, value in pairs(SkillsFramework.__skill_defs) do
-
-            if SkillsFramework.__skillsets[plyname][skill] == nil then
-                --TODO This is the same code as attach_skillset. code duplication bad so fix it.
-                SkillsFramework.__skillsets[plyname][skill] = {name = skill}
-
-                SkillsFramework.set_level(set_id, skill_id, SkillsFramework.__skill_defs[skill]["min"])
-                SkillsFramework.set_experience(set_id, skill_id, 0)
-            end
-
-        end
+        --TODO: Figure out a way to make sure players get new skills otherwise servers will not be able to add new skills.
     else
 
         --either player joined before skills were added or some other issue occurred
         --  give this poor lost soul a skill set!
-        SkillsFramework.attach_skillset(plyname)
+        SkillsFramework.attach_skillset(plyname) --TODO: figure out what skills new players should be given.
 
     end
 end)
@@ -111,7 +98,8 @@ end)
 --do some stuff right after the game starts
 minetest.after(0, function()
 
-    --TODO: block new skills from being added.
+    --TODO: block new skills from being added during run time.
+    --Blocks new skills from being defined during runtime because this may cause problems. comment out at your own risk.
     
 end)
 
