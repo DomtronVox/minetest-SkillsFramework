@@ -96,17 +96,31 @@ end
 
 --Creates and then attaches a new skill set to the given identifier.
 --  set_id    : skill set id 
-SkillsFramework.attach_skillset = function(set_id)
+--  skills    : table of skill ids or nil 
+SkillsFramework.attach_skillset = function(set_id, skills)
     local skill_defs = SkillsFramework.__skill_defs
     SkillsFramework.__skillsets[set_id] = {}
     local skill_set = SkillsFramework.__skillsets[set_id]
 
-    --create skill data for each registered skill and populate the new skill set
-    for skill_id, value in pairs(skill_defs) do
-        skill_set[skill_id] = {name = skill_id}
+    --default action of adding all skills if specific skills where not passed to the skillset.
+    if skills == nil then
+        --create skill data for each registered skill and populate the new skill set
+        for skill_id, v in pairs(skill_defs) do
+            SkillsFramework.__instantiate_skilldata(set_id, skill_id)
+        end
 
-        SkillsFramework.set_level(set_id, skill_id, value["min"])
-        SkillsFramework.set_experience(set_id, skill_id, 0)
+    --add skills in list
+    elseif type(skills) == "table" then
+        --get each skill id from the given list and try to add that skill
+        for i,skill_id in ipairs(skills) do 
+            SkillsFramework.__instantiate_skilldata(set_id, skill_id)
+        end
+
+    --passed skill list is an invalid value (not nil or table)
+    else
+        minetest.log("[SKILLSFRAMEWORK, WARNING] attach_skillset call for "
+                     .. set_id 
+                     .. " recived an invalid value for skill list. Should be nil or a table.")
     end
 end
 
@@ -123,7 +137,7 @@ SkillsFramework.get_level = function(set_id, skill_id)
     if SkillsFramework.__skill_entity_exists(set_id, skill_id) then
         return SkillsFramework.__skillsets[set_id][skill_id]["level"]
     else
-        return nil --skill or entity does not exits
+        return nil --skill or entity does not exist
     end
 end
 
@@ -136,13 +150,14 @@ SkillsFramework.set_level = function(set_id, skill, level)
         local skill_def = SkillsFramework.__skill_defs[skill]
         local skill_set = SkillsFramework.__skillsets[set_id][skill]
 
-        if level > skill_def.max then
+        --Deny any attempt to set level higher then the max
+        if level > skill_def.max and skill_def.max ~= 0 then
             level = skill_def.max
         end
- 
+
         skill_set["level"] = level
 
-        --calculate new next_level value; if 0 then set to 1 since we need some cost for 
+        --calculate new next_level value; if 0 then set to 1 since we need some cost to prevent errors 
         skill_set["next_level"] = skill_def["level_func"](level+1)
         if skill_set["next_level"] == 0 then 
             skill_set["next_level"] = 1 
@@ -181,9 +196,9 @@ SkillsFramework.set_experience = function(set_id, skill, experience)
     if SkillsFramework.__skill_entity_exists(set_id, skill) then
         local skill_def = SkillsFramework.__skill_defs[skill]
         local skill_set = SkillsFramework.__skillsets[set_id][skill]
-        
+
         --don't add experience if a level is maxed out.
-        if skill_set["level"] >= skill_def.max and not skill_def.max == 0 then
+        if skill_set["level"] >= skill_def.max and skill_def.max ~= 0 then
             return true
         end
 
@@ -194,6 +209,7 @@ SkillsFramework.set_experience = function(set_id, skill, experience)
         SkillsFramework.__skillsets[set_id][skill]["experience"] = experience
         SkillsFramework.__fix_skill_exp_and_level(set_id, skill) --see util.lua
 
+
         return true
     else
         return false
@@ -203,7 +219,7 @@ end
 
 --##Aliases##--
 
---Four adder functions that add the given value to the attribute
+--Two adder functions that add the given value to the attribute
 SkillsFramework.add_level = function(set_id, skill, level)
     return SkillsFramework.set_level(set_id, skill, 
                                    SkillsFramework.get_level(set_id, skill)+level)
