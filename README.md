@@ -4,18 +4,18 @@ SkillFramework
 This is a modification(mod) for [MineTest](minetest.net) that creates a character skill framework. Being a framework, this mod's intended audience are modders and game makers. Its primary purpose is to provide an easy to use yet highly configurable skill system that tracks both experience and levels for registered skills. This mod does not define any skills and is __useless on its own__.
 
 * License: Public Domain
-* Mod Version: 0.2
+* Mod Version: 0.3
 * Minetest Version(s): Minetest 0.4.12
 * Dependencies: None
 * Git repository: https://github.com/DomtronVox/minetest-SkillsFramework
-* Forum thread: [[Mod] SkillsFramework [0.2] [skillsframework]](https://forum.minetest.net/viewtopic.php?f=9&t=11406)
+* Forum thread: [[Mod] SkillsFramework [0.3] [skillsframework]](https://forum.minetest.net/viewtopic.php?f=9&t=11406)
 
 # Feature Summery
 
 * Detailed documentation of code and API.
-* __Skill sets__ hold the values for a group of skills.
-    * Can be used to describe the skills of either an individual or group.
-    * Specific skill set entries that track a skill's level and experience.
+* __Skill sets__ are a collection of unique skill data.
+    * Can be used to describe the skills of either an entity or group of entities.
+    * Each skill in a skill set keeps has a level and experience counter.
 * __Skill definitions__ using a name, sort group, and user defined level cost function.
 * Functions for accessing and modifying skills.
 * Data is saved and loaded from a file for persistence across server or single player shutdown.
@@ -32,6 +32,7 @@ __Usage__: SkillsFramework.function_name(arguments)
 | register\_skill  | name, group, level_func | none | Adds a new skill definition to the skill system. |
 | attach\_skillset | set_id                 | none | Creates and attaches a new skill set to the given identifier.|
 | remove\_skillset  | set_id                  | none | Deletes a skill set. |
+| append\_skills     | set_id, skill or list  | bool | Adds a single skill or list of skills to the indicated skill set. returns false if skill is already added|
 | set\_level        | set_id, skill, level    | none | Allows setting the level of a skill in a skill set. |
 | add\_level        | set_id, skill, level      | none | Adds the given amount to the level. |
 | get\_level        | set_id, skill           | int  | Return the level of specified skill. |
@@ -73,17 +74,18 @@ The data table can have the fields listed below. Required means there is no defa
 Here are two level\_func examples. The first example makes every level cost 100. The second example increases the cost linearly (i.e. level 3 costs 300).
 
         function(next\_level) return 100 end
-        function(next\_level) return 100*next_level end
+        function(next\_level) return 100*next_leve to all entities. You may want certain skills be associated with a class and others have to be learned. In this case skills can be added using the el end
 
 ## 2) Adding Skill Sets
 Skill sets are a collection of skills that are attached to unique identifiers (the player's name for example).
 
 This makes skill sets flexible enough to describe the skills of either an individual or a group. For example a skill set can be created and preinitialized for "level one skeletons" allowing any of level one skeleton to use those skills. Of course when using it for a group the modder should not add experience otherwise the entire group will gain levels from actions each individual does. 
 
-Use the SkillsFramework.attach\_skillset(entity) to create a skill set connected to an entity.
+Use the SkillsFramework.attach\_skillset(set\_id, skills) to create a skill set connected to an entity.
 
-* SkillsFramework.attach_skillset(set\_id)
+* SkillsFramework.attach_skillset(set\_id, skills)
     * "set\_id" is an unique identifier. This should be the entity's Minetest ID for individuals or a unique string for groups.
+    * "skills" is an array of skill names that will be placed into the skill set. Passing nil will add all skills to the skill set.
 
 ## 3) Using and Manipulating Skills
 Actions use skills. The definition of an action is upto the modder and needs to be coded. The common places for this code would be in the callbacks for the following 3 types of functions:
@@ -92,7 +94,7 @@ Actions use skills. The definition of an action is upto the modder and needs to 
 * On craft function.
 * in register\_on\_punchnode. However this can significantly slow down mintest since it is called every time a node is dug and therefore should be used as a last resort.
 
-Of course an action could be implemented most anywhere. Even on the global tick.
+Of course, an action could be implemented just about anywhere. Even during global tick.
 
 For implementing actions, SkillFramework provides various getter and setter functions. The getters are useful in testing against skills. The setters are useful for preinitializing skill sets or rewarding player's actions.
 
@@ -134,6 +136,13 @@ Examples
     SF.add_level(singleplayer, "Digging", 1)
     SF.set_experience(singleplayer, "Digging", 0)
 
+However, some skills should not necessarily be available to all entities. You may want certain skills be associated with a class and others have to be learned. In this case skills can be added using the append\_skill function assuming you passed a list of skills to the attach\_skillset function as passing nil defaults to adding all skills. If the skill is in the skill set the function will do nothing.
+
+* SkillsFramework.append\_skills(set_id, skills) returns bool
+    * "set\_id" is an unique identifier. This should be the entity's Minetest ID for individuals or a unique string for groups.
+    * "skills" an array of skill ids (mod:skill) that will be added to the skill set.
+    * returns a bool; true if the skill was added; false if the skill was already in the skill set.
+
 # Feedback, Bugs, and Improvements
 All feedback and bug reports are welcome. Open a new GitHub issue for bugs or post them and your feedback on the mod's [forum topic](https://forum.minetest.net/viewtopic.php?f=9&t=11406). Most pull requests will be accepted once they have been reviewed. 
 
@@ -144,7 +153,8 @@ In order of importance.
 
 * Improve skill formspec.
     * fix pages all showing the same 18 skills
-    * add an indicator that a skill is maxed out.
+    * add an indicator that a skill is at the maximum level.
+    * group skills by type
 
 * Optional "show last used skills on HUD".
 
@@ -153,7 +163,7 @@ In order of importance.
     * Skills have been added or removed from the lua code.
         * If skills are removed consider removing them from skill sets. When implemented this should to be optional(opt-in probebly).
 
-* Add a on\_level\_up function for skills
+* Add an on\_level\_up function for skills
 
 * Way to see another player's skills for admins and maybe players.
 
