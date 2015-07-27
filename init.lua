@@ -52,12 +52,12 @@ end)
 --function for switching between pages of the skill formspec
 minetest.register_on_player_receive_fields(function(player, formname, fields)
         -- verify this form is the skillframework form
-	if (formname ~= "skillsframework:display") then
+	if formname ~= "skillsframework:display" then
 		return
 	end
 
         --switch to the page whose button was clicked.
-	if (fields["skills_page"]) then
+	if fields["skills_page"] then
 		SkillsFramework.show_formspec(player:get_player_name(), fields["skills_page"])
 	end
 end)

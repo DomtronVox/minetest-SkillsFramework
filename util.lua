@@ -106,12 +106,12 @@ end
 
 --Generates the experience/level bar for a given skill. Returns the formspec string
 --    for the bare which will be appended to the main skill formspec string.
-SkillsFramework.__generate_bar = function(playername, skillname)
+SkillsFramework.__generate_bar = function(playername, skill_id)
         local SF = SkillsFramework
         local level_string = ""
 
-        --convert the level to a string so we can step throught it
-	local level = SF.get_level(playername, skillname) .. ""
+        --convert the int level to a string so we can step through each character
+	local level = SF.get_level(playername, skill_id) .. ""
 
         --step the length of the sting and convert each digit into images of digits
 	for i = 1,#level do
@@ -122,8 +122,8 @@ SkillsFramework.__generate_bar = function(playername, skillname)
         
         --create the formspec string for the bar.
 	local bar = "\\[combine:35x7:" 
-                    .. (SF.get_experience(playername, skillname) / 
-                          SF.get_next_level_cost(playername, skillname) * 35 - 35) 
+                    .. (SF.get_experience(playername, skill_id) / 
+                          SF.get_next_level_cost(playername, skill_id) * 35 - 35) 
                     .. ",0=skillsframework_bar.png:0,0=skillsframework_frame.png" .. level_string
 
 	return bar

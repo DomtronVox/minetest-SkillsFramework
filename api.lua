@@ -4,34 +4,77 @@
 
 --shows a formspec for skill GUI interaction.
 SkillsFramework.show_formspec = function(playername, page)
-        local SF = SkillsFramework
+        local SF = SkillsFramework --shorten variable name
+        local formspec = "size[8,9]" --define formspec var and set ui size
+        
+        --get number of skills owned by the player
+        local skill_count = 0
+        if SF.__skillsets[playername] ~= nil then
+            for v,b in pairs(SF.__skillsets[playername]) do
+                skill_count = skill_count + 1
+            end
+        end
 
-	page = page or 1 --default to 1 if no page is given.
-	local formspec = "size[8,9]" ..
-			"tabheader[0,0;skills_page;"
+        --player skillset does not exist
+        if SF.__skillsets[playername] == nil then
+        
+            local formspec = formspec .. "label[1.5,1.5;Player has no skillset attached. Ask admin!]"
+            console.log("[SKILLSFRAMEWORK, WARNING] Player "..
+                        playername .. " does not have a skillset attached.")
 
-	for i = 1,math.ceil(#SkillsFramework.__skills_list / 18)do
-		formspec = formspec ..
-			"Page " .. i .. ","
-	end
-	formspec = string.sub(formspec, 1, -2)
-	formspec = formspec .. ";" .. page .. "]"
+        --player has no skills
+        elseif skill_count == 0 then --SF.__skillsets[playername] == 0 then
 
-	local y_index = 0
-	page = page - 1
-	for i = 1 + page * 18,18 + page * 18,1 do
-		local skillname = SkillsFramework.__skills_list[i]
-		if not skillname then
-			break
-		end
+            formspec = formspec .. "label[1.5,1.5;Player has not learned any skills!]"
+
+        --player skillset does exist and has skills in it
+        else 
+            local skills_per_page = 18 -- how many skills fit on a page
+
+            page = page or 1 --default to 1 if no page is given.
+            formspec =  formspec .. "tabheader[0,0;skills_page;"
+
+            --define the names of the tab buttons
+            for i = 1,math.ceil(skill_count / skills_per_page)do
+                formspec = formspec .. "Page " .. i .. ","
+            end
+
+            --cut out the last comma and close out the tabheader
+            formspec = string.sub(formspec, 1, -2)
+            formspec = formspec .. ";" .. page .. "]"
+
+            --now step through and create a entry for each skill the character has 
+            local y_index = 0 --vertical location to place the next skill
+            local skills_iter = 1 --number of skills we have iterated over
+            
+            for skill_id,skill_data in pairs(SF.__skillsets[playername]) do
+
+                --print(skills_iter..","..skills_per_page..","..page..","
+                --      ..skills_per_page*page..","..skills_per_page*page - skills_per_page)
+                --print(skills_iter > skills_per_page*page)
+                --print(skills_iter < skills_per_page*page - skills_per_page)
+                --do not add a skill and exp bar if the current skill belongs on another page
+                if skills_iter > skills_per_page*page or
+                   skills_iter < skills_per_page*page - skills_per_page then
+                    break
+
+                else -- add skill to formspec
                 
-		formspec = formspec 
-			.. "image[0," .. y_index * .5 + .1 .. ";1.5,.4;" 
-                        .. SF.__generate_bar(playername, skillname) .. "]" 
-			.. "label[1.5," .. y_index * .5 .. ";Skill: " .. skillname:split(":")[2] 
-                        .. "]"
-		y_index = y_index + 1
-	end
+                    formspec = formspec 
+                               .. "image[0," .. y_index * .5 + .1 .. ";1.5,.4;" 
+                               .. SF.__generate_bar(playername, skill_id) .. "]" 
+                               .. "label[1.5," .. y_index * .5 .. ";" 
+                               .. skill_id:split(":")[2] --remove the mod name from the skill name
+                               .. "]"
+                    y_index = y_index + 1
+                end
+
+                skills_iter = skills_iter + 1
+
+            end --finished adding skills to the page
+
+        end --finished adding things to the formspec
+        
 	minetest.show_formspec(playername, "skillsframework:display", formspec)
 end
 
