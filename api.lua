@@ -90,43 +90,38 @@ SkillsFramework.define_skill = function(data)
     --TODO test that values are the right types (ints, strings, ect)
     --make sure required values are in the table.
     if not data.name then
-        minetest.log("[SKILLSFRAMEWORK, WARNING] Skill registered without name. Skill discarded.")
+        SkillsFramework.log("Skill registered without name. Skill discarded.")
         return 
     end
 
     if not data.mod then
-        minetest.log("[SKILLSFRAMEWORK, WARNING] Skill "
-                     ..data.name
-                     .." registration without mod name. Skill discarded.")
+        SkillsFramework.log("Skill " .. data.name ..
+                            " registration without mod name. Skill discarded.")
         return
     end
 
     if not data.level_func then
-        minetest.log("[SKILLSFRAMEWORK, WARNING] Skill "
-                     ..data.mod..':'..data.name
-                     .." registration without level cost function. Skill discarded.")
+        SkillsFramework.log("Skill " .. data.mod .. ':' .. data.name ..
+                           " registration without level cost function. Skill discarded.")
         return
     end
 
     -- do sanity checks on min and max
     if data.min and data.min < 0 then
-        minetest.log("[SKILLSFRAMEWORK, WARNING] Skill "
-                     ..data.mod..':'..data.name
-                     .."'s min data is less then zero. Setting to zero instead.")
+        SkillsFramework.log("Skill " .. data.mod .. ':' .. data.name ..
+                            "'s min data is less then zero. Setting to zero instead.")
         data.min = 0
     end
 
     if data.max and data.max < 0 then
-        minetest.log("[SKILLSFRAMEWORK, WARNING] Skill "
-                     ..data.mod..':'..data.name
-                     .."'s max data is less then zero. Setting to zero instead.")
+        SkillsFramework.log("Skill " .. data.mod .. ':' .. data.name ..
+                            "'s max data is less then zero. Setting to zero instead.")
         data.max = 0
     end
 
 --    if data.max and data.min and data.max ~= 0 and data.max < data.min then
---        minetest.log("[SKILLSFRAMEWORK, WARNING] Skill "
---                     ..data.mod..':'..data.name
---                     .."'s max level is less then the min level. Setting max to zero instead.")
+--        SkillsFramework.log("Skill " .. data.mod .. ':' .. data.name
+--                 "'s max level is less then the min level. Setting max to zero instead.")
 --        data.max = 0
 --    end
 
@@ -168,9 +163,8 @@ SkillsFramework.attach_skillset = function(set_id, skills)
 
     --passed skill list is an invalid value (not nil or table)
     else
-        minetest.log("[SKILLSFRAMEWORK, WARNING] attach_skillset call for "
-                     .. set_id 
-                     .. " recived an invalid value for skill list. Should be nil or a table.")
+        SkillsFramework.log("attach_skillset call for " .. set_id .. 
+                     " recived an invalid value for skill list. Should be nil or a table.")
     end
 end
 
@@ -188,8 +182,8 @@ SkillsFramework.append_skills = function(set_id, skills)
 
     --make sure skill set exists
     if skill_set == nil then
-        minetest.log("[SKILLSFRAMEWORK, WARNING] append_skills call failed. Skillset, "
-                     .. set_id .. " does not exist.")
+        SkillsFramework.log("append_skills call failed. Skillset, " .. set_id ..
+                            " does not exist.")
         return false
 
     --A single skill was passed

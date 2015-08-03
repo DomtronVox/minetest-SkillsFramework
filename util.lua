@@ -3,7 +3,10 @@
 --Description: Defines a handful of utility functions specifically for keeping the 
 --          API lua file short and to remove code duplication.
 
+--###Serialization###
 --NOTE: saving and loading code barrowed and modified from AdventureTest's modified Default mod
+
+
 
 --saves all the skill sets to a file 
 SkillsFramework.__save_skillsets = function()
@@ -27,7 +30,7 @@ SkillsFramework.__load_skillsets = function()
 
     --varify file existed and was opened if not print warning.
     if file == nil then 
-        minetest.log("[SKILLSFRAMEWORK, WARNING!] Saved skillsets file " .. 
+        SkillsFramework.log("Saved skillsets file " .. 
            minetest.get_worldpath()..SkillsFramework.FILE_NAME ..
            " not found, if this is not the first time running skillsframework you "  ..
            "may have lost player skills. Check debug and notify the mod author.")
@@ -37,10 +40,10 @@ SkillsFramework.__load_skillsets = function()
         local text = file:read("*all")
         file:close()
 
-        --if the file existed but was empty print warrning
+        --if the file existed but was empty print warning
         if text == "" or text == nil then 
-            minetest.log("[SKILLSFRAMEWORK, WARNING!] Saved skillsets file, " ..
-                minetest.get_worldpath()..SkillsFramework.FILE_NAME .. 
+            SkillsFramework.log("Saved skillsets file, " .. minetest.get_worldpath() ..
+                SkillsFramework.FILE_NAME .. 
                 ", is blank. If this is not the first time running skillsframework you " ..
                 "may have lost player skills. Check your logs and notify the mod author.")
         else
@@ -51,26 +54,36 @@ SkillsFramework.__load_skillsets = function()
 end
 
 
+
+--###TESTING FUNCTIONS###
+
+
+
 --returns true if the entity and skill exists and false+an error if they don't.
 SkillsFramework.__skill_entity_exists = function(set_id, skill_id)
     --make sure the given entity exists
     if SkillsFramework.__skillsets[set_id] then
+
         --make sure the skill exists
         if not SkillsFramework.__skill_defs[skill_id] then
-            minetest.log("[SKILLSFRAMEWORK, WARNING] The skill name " ..
-                         skill_id .. " is not a registered skill!")
+            SkillsFramework.log("The skill name "..skill_id.." is not a registered skill!")
+
         elseif not SkillsFramework.__skillsets[set_id][skill_id] then
-            minetest.log("[SKILLSFRAMEWORK, WARNING] The skill name " ..
-                         skill_id .. " is not in this skillset!")
+            SkillsFramework.log("The skill name "..skill_id.." is not in this skillset!")
+
         else
             return true -- both exist we are done
         end
+
     else
-        minetest.log("[SKILLSFRAMEWORK, WARNING] The entity name "..set_id.." is not a valid skill set id!")
+        SkillsFramework.log("The entity name "..set_id.." is not a valid skill set id!")
     end
 
     return false --one or the other is missing look for errors in the log
 end
+
+
+--###SKILL MODIFYING FUNCTIONS###
 
 --creates the data for a particular skill in a skill set
 SkillsFramework.__instantiate_skilldata = function(set_id, skill_id)
@@ -79,14 +92,14 @@ SkillsFramework.__instantiate_skilldata = function(set_id, skill_id)
 
     --make sure skill is registered
     if skill_def == nil then
-        minetest.log("[SKILLSFRAMEWORK, WARNING] attempted to create skill data for skill " ..
+        SkillsFramework.log("attempted to create skill data for skill " ..
                      skill_id .. " in skill set " .. set_id ..
                      " but the skill was not defined. Please check that the skillname" ..
                      " follows the convention modname:skillname.")
 
     --check if skill has already been created.
     elseif skill ~= nil then
-        minetest.log("[SKILLSFRAMEWORK, WARNING] attempted to create skill data for skill " ..
+        SkillsFramework.log("attempted to create skill data for skill " ..
                      skill_id .. " in skill set " .. set_id ..
                      " but the player already has the skill so nothing has changed.")
 
@@ -109,6 +122,18 @@ SkillsFramework.__fix_skill_exp_and_level = function(set_id, skill)
         skill_obj["experience"] = skill_obj["experience"] - skill_obj["next_level"]
         SkillsFramework.add_level(set_id, skill, 1) 
     end
+end
+
+
+
+--###MISC UTILITY FUNCTIONS###
+
+
+
+--Logging function to simplify the rest of the code. Takes a string as the message.
+SkillsFramework.log = function(mesg)
+    --we use error as the log level so it shows up. We also add the mods prefix to the message
+    minetest.log("error", "[SKILLSFRAMEWORK, WARNING!] "..mesg)
 end
 
 
