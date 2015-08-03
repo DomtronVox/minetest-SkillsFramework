@@ -68,7 +68,8 @@ end)
 --##Handle player related events##
 --setup a new player
 minetest.register_on_newplayer(function(player)
-    SkillsFramework.attach_skillset(player:get_player_name()) --
+    --create a new skillset for the player.
+    SkillsFramework.attach_skillset(player:get_player_name(), SkillsFramework.STARTING_SKILLS)
 end)
 
 

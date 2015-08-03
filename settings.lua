@@ -15,3 +15,7 @@ SkillsFramework.SAVE_INTERVAL = 1000 --milliseconds
 --filepath where all skillsets are saved 
 SkillsFramework.FILE_NAME = "/skill_sets"
 
+--List of starting skills. 
+--    nil means all defined skills will be added. empty string means no skills will be added.
+SkillsFramework.STARTING_SKILLS = nil
+

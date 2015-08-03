@@ -74,21 +74,29 @@ end
 
 --creates the data for a particular skill in a skill set
 SkillsFramework.__instantiate_skilldata = function(set_id, skill_id)
-    local skill_data = SkillsFramework.__skill_defs[skill_id]
+    local skill_def = SkillsFramework.__skill_defs[skill_id]
+    local skill = SkillsFramework.__skillsets[set_id][skill_id]
 
     --make sure skill is registered
-    if skill_data then 
+    if skill_def == nil then
+        minetest.log("[SKILLSFRAMEWORK, WARNING] attempted to create skill data for skill " ..
+                     skill_id .. " in skill set " .. set_id ..
+                     " but the skill was not defined. Please check that the skillname" ..
+                     " follows the convention modname:skillname.")
+
+    --check if skill has already been created.
+    elseif skill ~= nil then
+        minetest.log("[SKILLSFRAMEWORK, WARNING] attempted to create skill data for skill " ..
+                     skill_id .. " in skill set " .. set_id ..
+                     " but the player already has the skill so nothing has changed.")
+
+    --create the skill if everything else is good. 
+    else
         --create a new entry for this skill in the given skill set and populate it
         SkillsFramework.__skillsets[set_id][skill_id] = {name = skill_id}
 
-        SkillsFramework.set_level(set_id, skill_id, skill_data["min"])
+        SkillsFramework.set_level(set_id, skill_id, skill_def["min"])
         SkillsFramework.set_experience(set_id, skill_id, 0)
-
-    --print warning if a invalid skill id is given
-    else
-        minetest.log("[SKILLSFRAMEWORK, WARNING] attempted to create skill data for skill " ..
-                     skill_id .. " in skill set " .. set_id ..
-                     " received an invalid value for skill list. Should be nil or a table.")
     end
 end
 

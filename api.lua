@@ -78,13 +78,14 @@ SkillsFramework.show_formspec = function(playername, page)
 	minetest.show_formspec(playername, "skillsframework:display", formspec)
 end
 
---Adds a new skill definition to the skill system. Data contains:
---  name       : skill's name
---  mod        : registering mod
---  level_func : called on level up; receives skill level integer 
+--Adds a new skill definition to the skill system. Data can contain:
+--  *name       : skill's name
+--  *mod        : registering mod
+--  *level_func : called on level up; receives skill level integer 
 --  group      : name of group the skill belongs to
 --  min        : start level value and minimum level
 --  max        : maximum level value
+--  (* required)
 SkillsFramework.define_skill = function(data)
     --TODO test that values are the right types (ints, strings, ect)
     --make sure required values are in the table.
@@ -122,6 +123,13 @@ SkillsFramework.define_skill = function(data)
         data.max = 0
     end
 
+--    if data.max and data.min and data.max ~= 0 and data.max < data.min then
+--        minetest.log("[SKILLSFRAMEWORK, WARNING] Skill "
+--                     ..data.mod..':'..data.name
+--                     .."'s max level is less then the min level. Setting max to zero instead.")
+--        data.max = 0
+--    end
+
     --create entry for the new skill
     SkillsFramework.__skill_defs[data.mod..':'..data.name] = {
         ["name"] = data.name,              --skill name
@@ -143,21 +151,20 @@ end
 SkillsFramework.attach_skillset = function(set_id, skills)
     local skill_defs = SkillsFramework.__skill_defs
     SkillsFramework.__skillsets[set_id] = {}
-    local skill_set = SkillsFramework.__skillsets[set_id]
 
     --default action of adding all skills if specific skills where not passed to the skillset.
     if skills == nil then
-        --create skill data for each registered skill and populate the new skill set
+        --TODO: lookup how to get keys from a table then 
+        --    use append_skills with the skilldef keys as the skills.
+        local skills = {}
         for skill_id, v in pairs(skill_defs) do
-            SkillsFramework.__instantiate_skilldata(set_id, skill_id)
+            table.insert(skills, skill_id)
         end
+        SkillsFramework.append_skills(set_id, skills)
 
-    --add skills in list
+    --add skills from an array
     elseif type(skills) == "table" then
-        --get each skill id from the given list and try to add that skill
-        for i,skill_id in ipairs(skills) do 
-            SkillsFramework.__instantiate_skilldata(set_id, skill_id)
-        end
+        SkillsFramework.append_skills(set_id, skills)
 
     --passed skill list is an invalid value (not nil or table)
     else
@@ -171,6 +178,33 @@ end
 --  set_id    : skill set id 
 SkillsFramework.remove_skillset = function(set_id)
     SkillsFramework.__skillsets[set_id] = nil
+end
+
+--Creates skill entries in the skill set for each given skill.
+--  set_id    : skill set id 
+--  skills    : table of skill ids or string of a single skill id
+SkillsFramework.append_skills = function(set_id, skills)
+    local skill_set = SkillsFramework.__skillsets[set_id]
+
+    --make sure skill set exists
+    if skill_set == nil then
+        minetest.log("[SKILLSFRAMEWORK, WARNING] append_skills call failed. Skillset, "
+                     .. set_id .. " does not exist.")
+        return false
+
+    --A single skill was passed
+    elseif type(skills) == "string" then
+
+        SkillsFramework.__instantiate_skilldata(set_id, skills)
+
+    --array of skills was passed
+    else
+
+        for i,skill_id in ipairs(skills) do 
+            SkillsFramework.__instantiate_skilldata(set_id, skill_id)
+        end
+
+    end
 end
 
 --Return the level of specified skill.
