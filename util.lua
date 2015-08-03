@@ -58,50 +58,74 @@ end
 --###TESTING FUNCTIONS###
 
 
-
---returns true if the entity and skill exists and false+an error if they don't.
-SkillsFramework.__skill_entity_exists = function(set_id, skill_id)
-    --make sure the given entity exists
-    if SkillsFramework.__skillsets[set_id] then
-
-        --make sure the skill exists
-        if not SkillsFramework.__skill_defs[skill_id] then
-            SkillsFramework.log("The skill name "..skill_id.." is not a registered skill!")
-
-        elseif not SkillsFramework.__skillsets[set_id][skill_id] then
-            SkillsFramework.log("The skill name "..skill_id.." is not in this skillset!")
-
-        else
-            return true -- both exist we are done
-        end
-
+--Returns true if the skill definition exists
+SkillsFramework.__skilldef_exists = function(skill_id, silent)
+    if SkillsFramework.__skill_defs[skill_id] then
+        return true
     else
-        SkillsFramework.log("The entity name "..set_id.." is not a valid skill set id!")
+        if silent == false then
+            SkillsFramework.log("The skill name "..skill_id.." has not been defined! " ..
+                                "devs: Check that you are using modname:skillname.")
+        end
+        return false
     end
+end
 
-    return false --one or the other is missing look for errors in the log
+--Returns true if the skill definition exists
+SkillsFramework.__skillset_exists = function(set_id, silent)
+    if SkillsFramework.__skillsets[set_id] then
+        return true
+     else
+        if silent == false then
+            SkillsFramework.log("The entity name "..set_id.." is not a valid skillset id!")
+        end
+        return false
+    end
+end
+
+--Returns true if the skillset has the given skill
+SkillsFramework.__skillset_has_skill = function(set_id, skill_id, silent)
+    if SkillsFramework.__skilldef_exists(skill_id, silent) and
+       SkillsFramework.__skillset_exists(set_id, silent) then
+    
+        if SkillsFramework.__skillsets[set_id][skill_id] then
+            return true
+        else
+            if silent == false then
+                SkillsFramework.log("The skill name "..skill_id.." is not in the skillset " ..
+                                    set_id .. "!")
+            end
+            return false
+        end
+    else 
+        return false
+    end
 end
 
 
 --###SKILL MODIFYING FUNCTIONS###
 
+
+
 --creates the data for a particular skill in a skill set
 SkillsFramework.__instantiate_skilldata = function(set_id, skill_id)
     local skill_def = SkillsFramework.__skill_defs[skill_id]
-    local skill = SkillsFramework.__skillsets[set_id][skill_id]
 
     --make sure skill is registered
-    if skill_def == nil then
-        SkillsFramework.log("attempted to create skill data for skill " ..
-                     skill_id .. " in skill set " .. set_id ..
-                     " but the skill was not defined. Please check that the skillname" ..
-                     " follows the convention modname:skillname.")
+    if SkillsFramework.__skilldef_exists(skill_id) == false then
+        SkillsFramework.log("attempted to create skill data for skillset " ..
+                     set_id .. ". See previous message.")
+
+    --make sure skillset exists
+    elseif SkillsFramework.__skillset_exists(set_id) == false then
+        SkillsFramework.log("attempted to create skill data for skill " .. 
+                            skill_id .. " but failed. See previous message.")
 
     --check if skill has already been created.
-    elseif skill ~= nil then
+    elseif SkillsFramework.__skillset_has_skill(set_id, skill_id, true) then
         SkillsFramework.log("attempted to create skill data for skill " ..
                      skill_id .. " in skill set " .. set_id ..
-                     " but the player already has the skill so nothing has changed.")
+                     " but the player already has the skill. Nothing has changed.")
 
     --create the skill if everything else is good. 
     else

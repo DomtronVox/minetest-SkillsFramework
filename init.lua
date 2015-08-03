@@ -14,6 +14,18 @@ SkillsFramework.__skill_defs = {}
 --the order of the skills for display
 SkillsFramework.__skills_list = {}
 
+
+--Blocks new skills from being defined during runtime because doing so may cause problems.
+--    Remove out at your own risk.
+minetest.after(0, function()
+    SkillsFramework.define_skill = function(data)
+        SkillsFramework.log("Attempted to define skill " .. data.name .. 
+                            "after registration period was over. You can remove " ..
+                            "the block but it may cause problems.")
+    end
+end)
+
+
 --load important stuff
 dofile(minetest.get_modpath(minetest.get_current_modname()).."/settings.lua")
 dofile(minetest.get_modpath(minetest.get_current_modname()).."/util.lua")
@@ -79,13 +91,14 @@ minetest.register_on_joinplayer(function(player)
 
     local plyname = player:get_player_name()
 
-    if SkillsFramework.__skillsets[plyname] ~= nil then
-        --TODO: Figure out a way to make sure players get new skills otherwise servers will not be able to add new skills.
+    if SkillsFramework.__skillset_exists(plyname) then
+        --TODO: Figure out a way to make sure players get new skills otherwise servers 
+        --    will not be able to add new skills.
     else
 
         --either player joined before skills were added or some other issue occurred
         --  give this poor lost soul a skill set!
-        SkillsFramework.attach_skillset(plyname) --TODO: figure out what skills new players should be given.
+        SkillsFramework.attach_skillset(plyname, SkillsFramework.STARTING_SKILLS)
 
     end
 end)
@@ -94,14 +107,6 @@ end)
 --save data when a player leaves
 minetest.register_on_leaveplayer(function(ObjectRef)
     SkillsFramework.__save_skillsets()
-end)
-
---do some stuff right after the game starts
-minetest.after(0, function()
-
-    --TODO: block new skills from being added during run time.
-    --Blocks new skills from being defined during runtime because this may cause problems. comment out at your own risk.
-    
 end)
 
 

@@ -9,18 +9,17 @@ SkillsFramework.show_formspec = function(playername, page)
         
         --get number of skills owned by the player
         local skill_count = 0
-        if SF.__skillsets[playername] ~= nil then
+        if SF.__skillset_exists(playername) then
             for v,b in pairs(SF.__skillsets[playername]) do
                 skill_count = skill_count + 1
             end
         end
 
         --player skillset does not exist
-        if SF.__skillsets[playername] == nil then
+        if SF.__skillset_exists(playername) == false then
         
             local formspec = formspec .. "label[1.5,1.5;Player has no skillset attached. Ask admin!]"
-            console.log("[SKILLSFRAMEWORK, WARNING] Player "..
-                        playername .. " does not have a skillset attached.")
+            SF.log("Player " .. playername .. " does not have a skillset attached.")
 
         --player has no skills
         elseif skill_count == 0 then --SF.__skillsets[playername] == 0 then
@@ -134,7 +133,7 @@ SkillsFramework.define_skill = function(data)
         ["min"] = data.min or 0,           --minimum level
         ["max"] = data.max or 0,           --maximum level
     }
-
+    
     --skills are listed on the formspec in the order they are registered.
     table.insert(SkillsFramework.__skills_list, data.mod..':'..data.name)
 end
@@ -146,7 +145,6 @@ end
 SkillsFramework.attach_skillset = function(set_id, skills)
     local skill_defs = SkillsFramework.__skill_defs
     SkillsFramework.__skillsets[set_id] = {}
-
     --default action of adding all skills if specific skills where not passed to the skillset.
     if skills == nil then
         --TODO: lookup how to get keys from a table then 
@@ -181,31 +179,31 @@ SkillsFramework.append_skills = function(set_id, skills)
     local skill_set = SkillsFramework.__skillsets[set_id]
 
     --make sure skill set exists
-    if skill_set == nil then
-        SkillsFramework.log("append_skills call failed. Skillset, " .. set_id ..
-                            " does not exist.")
+    if SkillsFramework.__skillset_exists(set_id) == false then
+        SkillsFramework.log("append_skills call failed. See previous message.")
         return false
 
     --A single skill was passed
     elseif type(skills) == "string" then
-
         SkillsFramework.__instantiate_skilldata(set_id, skills)
 
     --array of skills was passed
     else
 
-        for i,skill_id in ipairs(skills) do 
+        for i,skill_id in ipairs(skills) do
             SkillsFramework.__instantiate_skilldata(set_id, skill_id)
         end
 
     end
+
+    return true
 end
 
 --Return the level of specified skill.
 --  set_id    : skill set id 
 --  skill_id  : name of the skill to test
 SkillsFramework.get_level = function(set_id, skill_id)
-    if SkillsFramework.__skill_entity_exists(set_id, skill_id) then
+    if SkillsFramework.__skillset_has_skill(set_id, skill_id) then
         return SkillsFramework.__skillsets[set_id][skill_id]["level"]
     else
         return nil --skill or entity does not exist
@@ -216,10 +214,12 @@ end
 --  set_id    : skill set id 
 --  skill     : name of the skill to test
 --  level     : new level to set it to
-SkillsFramework.set_level = function(set_id, skill, level)
-    if SkillsFramework.__skill_entity_exists(set_id, skill) then
-        local skill_def = SkillsFramework.__skill_defs[skill]
-        local skill_set = SkillsFramework.__skillsets[set_id][skill]
+SkillsFramework.set_level = function(set_id, skill_id, level)
+
+    if SkillsFramework.__skillset_has_skill(set_id, skill_id) then
+
+        local skill_def = SkillsFramework.__skill_defs[skill_id]
+        local skill_set = SkillsFramework.__skillsets[set_id][skill_id]
 
         --Deny any attempt to set level higher then the max
         if level > skill_def.max and skill_def.max ~= 0 then
@@ -240,9 +240,12 @@ end
 --Returns the cost of the next level be it in experience or progression points.
 --  set_id    : skill set id 
 --  skill     : name of the skill to test
-SkillsFramework.get_next_level_cost = function(set_id, skill)
-    if SkillsFramework.__skill_entity_exists(set_id, skill) then
-        return SkillsFramework.__skillsets[set_id][skill]["next_level"]
+SkillsFramework.get_next_level_cost = function(set_id, skill_id)
+
+    if SkillsFramework.__skillset_has_skill(set_id, skill_id) then
+
+        return SkillsFramework.__skillsets[set_id][skill_id]["next_level"]
+
     else
         return nil
     end
@@ -251,9 +254,11 @@ end
 --Returns the specified skill's experience.
 --  set_id    : skill set id 
 --  skill     : name of the skill to test
-SkillsFramework.get_experience = function(set_id, skill)
-    if SkillsFramework.__skill_entity_exists(set_id, skill) then
-        return SkillsFramework.__skillsets[set_id][skill]["experience"]
+SkillsFramework.get_experience = function(set_id, skill_id)
+    if SkillsFramework.__skillset_has_skill(set_id, skill_id) then
+
+        return SkillsFramework.__skillsets[set_id][skill_id]["experience"]
+
     else
         return nil
     end
@@ -263,10 +268,11 @@ end
 --  set_id    : skill set id 
 --  skill     : name of the skill to test
 --  experience : amount to set it to
-SkillsFramework.set_experience = function(set_id, skill, experience)
-    if SkillsFramework.__skill_entity_exists(set_id, skill) then
-        local skill_def = SkillsFramework.__skill_defs[skill]
-        local skill_set = SkillsFramework.__skillsets[set_id][skill]
+SkillsFramework.set_experience = function(set_id, skill_id, experience)
+    if SkillsFramework.__skillset_has_skill(set_id, skill_id) then
+
+        local skill_def = SkillsFramework.__skill_defs[skill_id]
+        local skill_set = SkillsFramework.__skillsets[set_id][skill_id]
 
         --don't add experience if a level is maxed out.
         if skill_set["level"] >= skill_def.max and skill_def.max ~= 0 then
@@ -277,8 +283,8 @@ SkillsFramework.set_experience = function(set_id, skill, experience)
         experience = math.floor(experience + 0.5)
 
         --set the new experience value and make sure a level up occurs if needed
-        SkillsFramework.__skillsets[set_id][skill]["experience"] = experience
-        SkillsFramework.__fix_skill_exp_and_level(set_id, skill) --see util.lua
+        SkillsFramework.__skillsets[set_id][skill_id]["experience"] = experience
+        SkillsFramework.__fix_skill_exp_and_level(set_id, skill_id) --see util.lua
 
 
         return true
