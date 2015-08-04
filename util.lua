@@ -63,7 +63,7 @@ SkillsFramework.__skilldef_exists = function(skill_id, silent)
     if SkillsFramework.__skill_defs[skill_id] then
         return true
     else
-        if silent == false then
+        if silent == false and silent ~= nil then
             SkillsFramework.log("The skill name "..skill_id.." has not been defined! " ..
                                 "devs: Check that you are using modname:skillname.")
         end
@@ -76,7 +76,7 @@ SkillsFramework.__skillset_exists = function(set_id, silent)
     if SkillsFramework.__skillsets[set_id] then
         return true
      else
-        if silent == false then
+        if silent == false and silent ~= nil then
             SkillsFramework.log("The entity name "..set_id.." is not a valid skillset id!")
         end
         return false
@@ -91,7 +91,7 @@ SkillsFramework.__skillset_has_skill = function(set_id, skill_id, silent)
         if SkillsFramework.__skillsets[set_id][skill_id] then
             return true
         else
-            if silent == false then
+            if silent == false and silent ~= nil then
                 SkillsFramework.log("The skill name "..skill_id.." is not in the skillset " ..
                                     set_id .. "!")
             end
@@ -102,6 +102,77 @@ SkillsFramework.__skillset_has_skill = function(set_id, skill_id, silent)
     end
 end
 
+
+--Make sure given data table has the required fields to define a new skill. 
+--   Also make sure values are of the correct type.
+SkillsFramework.__validate_skilldef_data = function(data)
+
+    if not data.name then
+        SkillsFramework.log("Skill registered without name. Skill discarded.")
+        return nil
+
+    elseif type(data.name) ~= "string" then
+        SkillsFramework.log("Skill registered with a name value that is not a " ..
+                            "string. Skill discarded. Value received was:")
+        print(dump(data.name))
+        return nil
+    end
+
+    if not data.mod then
+        SkillsFramework.log("Skill " .. data.name ..
+                            " registration without mod name. Skill discarded.")
+        return nil
+
+    elseif type(data.mod) ~= "string" then
+        SkillsFramework.log("Skill " .. data.name ..
+                            " registered with a mod name value that is not a string."..
+                            " Skill discarded. Value recived was:")
+        print(dump(data.mod))
+        return nil
+    end
+
+    local skill_id = data.mod .. ':' .. data.name
+
+    if not data.cost_func then
+        SkillsFramework.log("Skill " .. skill_id ..
+                       " was registered without a level cost function. Skill discarded.")
+        return nil
+    elseif type(data.cost_func) ~= "function" then
+        SkillsFramework.log("Skill " .. skill_id .. " given value for level cost" ..
+                            " function not a function. Skill discarded. Vslue recived was:")
+        print(dump(data.cost_func))
+        return nil
+    end
+
+    -- do sanity checks on min and max
+    if data.min and data.min < 0 then
+        SkillsFramework.log("Skill " .. data.mod .. ':' .. data.name ..
+                            "'s min data is less then zero. Setting to zero instead.")
+        data.min = 0
+    end
+
+    if data.max and data.max < 0 then
+        SkillsFramework.log("Skill " .. data.mod .. ':' .. data.name ..
+                            "'s max data is less then zero. Setting to zero instead.")
+        data.max = 0
+    end
+
+--    if data.max and data.min and data.max ~= 0 and data.max < data.min then
+--        SkillsFramework.log("Skill " .. data.mod .. ':' .. data.name
+--                 "'s max level is less then the min level. Setting max to zero instead.")
+--        data.max = 0
+--    end
+
+    --varify levelup function is actually a function
+    if type(data.on_levelup) ~= "function" and data.on_levelup ~= nil then
+        SkillsFramework.log("Skill " .. skill_id .. " given value for on_levelup" ..
+                            " function not a function. Levelup func set to nil. Vslue recived was:")
+        print(dump(data.on_levelup))
+        data.on_levelup = nil
+    end
+
+    return data
+end
 
 --###SKILL MODIFYING FUNCTIONS###
 
@@ -139,12 +210,18 @@ end
 
 --verifies that the experience "bar" does not exceed the to next level value
 --  skill_obj: table that has a single skills data from a particular skill set
-SkillsFramework.__fix_skill_exp_and_level = function(set_id, skill)
-    local skill_obj = SkillsFramework.__skillsets[set_id][skill]
+SkillsFramework.__fix_skill_exp_and_level = function(set_id, skill_id)
+    local on_levelup = SkillsFramework.__skill_defs[skill_id]["on_levelup"]
+    local skill_obj = SkillsFramework.__skillsets[set_id][skill_id]
 
     while skill_obj["experience"] >= skill_obj["next_level"] do
         skill_obj["experience"] = skill_obj["experience"] - skill_obj["next_level"]
-        SkillsFramework.add_level(set_id, skill, 1) 
+        SkillsFramework.add_level(set_id, skill_id, 1) 
+        
+        --call on_levelup callback
+        if on_levelup then
+            on_levelup(set_id, SkillsFramework.get_level(set_id, skill_id))
+        end
     end
 end
 

@@ -80,58 +80,27 @@ end
 --Adds a new skill definition to the skill system. Data can contain:
 --  *name       : skill's name
 --  *mod        : registering mod
---  *level_func : called on level up; receives skill level integer 
+--  *cost_func : called when an experience cost is needed; receives skill level integer;
+--                   returns that levels experience cost 
 --  group      : name of group the skill belongs to
 --  min        : start level value and minimum level
 --  max        : maximum level value
 --  (* required)
 SkillsFramework.define_skill = function(data)
     --TODO test that values are the right types (ints, strings, ect)
-    --make sure required values are in the table.
-    if not data.name then
-        SkillsFramework.log("Skill registered without name. Skill discarded.")
-        return 
-    end
-
-    if not data.mod then
-        SkillsFramework.log("Skill " .. data.name ..
-                            " registration without mod name. Skill discarded.")
-        return
-    end
-
-    if not data.level_func then
-        SkillsFramework.log("Skill " .. data.mod .. ':' .. data.name ..
-                           " registration without level cost function. Skill discarded.")
-        return
-    end
-
-    -- do sanity checks on min and max
-    if data.min and data.min < 0 then
-        SkillsFramework.log("Skill " .. data.mod .. ':' .. data.name ..
-                            "'s min data is less then zero. Setting to zero instead.")
-        data.min = 0
-    end
-
-    if data.max and data.max < 0 then
-        SkillsFramework.log("Skill " .. data.mod .. ':' .. data.name ..
-                            "'s max data is less then zero. Setting to zero instead.")
-        data.max = 0
-    end
-
---    if data.max and data.min and data.max ~= 0 and data.max < data.min then
---        SkillsFramework.log("Skill " .. data.mod .. ':' .. data.name
---                 "'s max level is less then the min level. Setting max to zero instead.")
---        data.max = 0
---    end
+    --make sure required values are in the table and that they are of the right types.
+    data = SkillsFramework.__validate_skilldef_data(data)
+    if not data then return false end --data is nil if the table had missing or malformed info
 
     --create entry for the new skill
     SkillsFramework.__skill_defs[data.mod..':'..data.name] = {
         ["name"] = data.name,              --skill name
         ["mod"] = data.mod,                --name of registering mod
         ["group"] = data.group,            --grouping name
-        ["level_func"] = data.level_func,  --function that calculates each levels cost
+        ["cost_func"] = data.cost_func,  --function that calculates each levels cost
         ["min"] = data.min or 0,           --minimum level
         ["max"] = data.max or 0,           --maximum level
+        ["on_levelup"] = data.on_levelup,  --function called on natural levelups
     }
     
     --skills are listed on the formspec in the order they are registered.
@@ -204,10 +173,8 @@ end
 --  skill_id  : name of the skill to test
 SkillsFramework.get_level = function(set_id, skill_id)
     if SkillsFramework.__skillset_has_skill(set_id, skill_id) then
-        return SkillsFramework.__skillsets[set_id][skill_id]["level"]
-    else
-        return nil --skill or entity does not exist
-    end
+         return SkillsFramework.__skillsets[set_id][skill_id]["level"]
+    else return nil end
 end
 
 --Allows setting the level of a skill in a skill set.
@@ -229,7 +196,7 @@ SkillsFramework.set_level = function(set_id, skill_id, level)
         skill_set["level"] = level
 
         --calculate new next_level value; if 0 then set to 1 since we need some cost to prevent errors 
-        skill_set["next_level"] = skill_def["level_func"](level+1)
+        skill_set["next_level"] = skill_def["cost_func"](level+1)
         if skill_set["next_level"] == 0 then 
             skill_set["next_level"] = 1 
         end
@@ -241,14 +208,9 @@ end
 --  set_id    : skill set id 
 --  skill     : name of the skill to test
 SkillsFramework.get_next_level_cost = function(set_id, skill_id)
-
     if SkillsFramework.__skillset_has_skill(set_id, skill_id) then
-
-        return SkillsFramework.__skillsets[set_id][skill_id]["next_level"]
-
-    else
-        return nil
-    end
+         return SkillsFramework.__skillsets[set_id][skill_id]["next_level"]
+    else return nil end
 end
 
 --Returns the specified skill's experience.
@@ -256,12 +218,8 @@ end
 --  skill     : name of the skill to test
 SkillsFramework.get_experience = function(set_id, skill_id)
     if SkillsFramework.__skillset_has_skill(set_id, skill_id) then
-
-        return SkillsFramework.__skillsets[set_id][skill_id]["experience"]
-
-    else
-        return nil
-    end
+         return SkillsFramework.__skillsets[set_id][skill_id]["experience"]
+    else return nil end
 end
 
 --Sets the specified skill's experience.
@@ -297,12 +255,16 @@ end
 --##Aliases##--
 
 --Two adder functions that add the given value to the attribute
-SkillsFramework.add_level = function(set_id, skill, level)
-    return SkillsFramework.set_level(set_id, skill, 
-                                   SkillsFramework.get_level(set_id, skill)+level)
+SkillsFramework.add_level = function(set_id, skill_id, level)
+    if SkillsFramework.__skillset_has_skill(set_id, skill_id) then
+        return SkillsFramework.set_level(set_id, skill_id, 
+                                   SkillsFramework.get_level(set_id, skill_id)+level)
+    end
 end
 
-SkillsFramework.add_experience = function(set_id, skill, experience)
-    return SkillsFramework.set_experience(set_id, skill, 
-                         SkillsFramework.get_experience(set_id, skill)+experience)
+SkillsFramework.add_experience = function(set_id, skill_id, experience)
+    if SkillsFramework.__skillset_has_skill(set_id, skill_id) then
+        return SkillsFramework.set_experience(set_id, skill_id, 
+                         SkillsFramework.get_experience(set_id, skill_id)+experience)
+    end
 end
