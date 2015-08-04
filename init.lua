@@ -136,7 +136,7 @@ minetest.register_chatcommand("skills", {
 
          --TODO: make skill name parameter more lenient (i.e. allow both digging and Digging)
          -- the param is the skill so print the data if possible
-         elseif SkillsFramework.__skillEntityExists(PCname, param) then
+         elseif SkillsFramework.__skillset_has_skill(PCname, param) then
              minetest.chat_send_player(PCname,
                   param .. 
                   " - Level: " .. 
